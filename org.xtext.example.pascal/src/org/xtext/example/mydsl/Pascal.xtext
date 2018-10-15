@@ -1,0 +1,9 @@
+grammar org.xtext.example.mydsl.Pascal with org.eclipse.xtext.common.Terminals
+
+generate pascal "http://www.xtext.org/example/mydsl/Pascal"
+
+Model:
+	greetings+=Greeting*;
+	
+Greeting:
+	'Hello' name=ID '!';
