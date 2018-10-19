@@ -3,7 +3,24 @@ grammar org.xtext.example.mydsl.Pascal with org.eclipse.xtext.common.Terminals
 generate pascal "http://www.xtext.org/example/mydsl/Pascal"
 
 Model:
-	greetings+=Greeting*;
-	
-Greeting:
-	'Hello' name=ID '!';
+	element = program;
+
+
+// Rewrite String common Terminal 
+
+terminal string:
+	"'" ('a'..'z' |'A'..'Z'|'_'|'0'..'9' | '^' | "?" | "." | "/" | "\\" | "*" | "%" | "&" | "@" | "#" | "(" | ")" | "$" | "=" | "{" | "}" | "[" | "]" | "," | "!" |"|" | "+" | "-")* "'"
+;
+
+// Multi-line comment
+
+terminal multi_line_comment:
+	 '{*' -> '*}' | '(*' -> '*)'
+;
+
+// Single line comment
+
+terminal single_line_comment:
+	'{' !('\n'|'\r')* '}' ('\r'? '\n')? | SL_COMMENT
+;
+
