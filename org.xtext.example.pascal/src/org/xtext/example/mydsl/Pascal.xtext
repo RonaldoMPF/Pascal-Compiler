@@ -2,25 +2,144 @@ grammar org.xtext.example.mydsl.Pascal with org.eclipse.xtext.common.Terminals
 
 generate pascal "http://www.xtext.org/example/mydsl/Pascal"
 
-Model:
-	element = program;
+Pascal:
+	element = program
+;
+
+
+program:{program}
+	(program_heading=programHeading block=block ".")?
+;
+
+programHeading:
+	"program" identifier=ID "(" identifierList=identifierList ")" ";"
+;
+
+identifierList:
+	identifier+=ID ( "," identifier+=ID )*
+;
+
+block:
+	declarationSection=declarationSection statementSection=statementSection
+;
+
+statementSection:
+	"begin" statementSequence=statementSequence "end"
+;
+
+statementSequence:
+	statement+=statement (";" statement+=statement)*
+;
+
+statement:
+	(label=label ":")? (simpleStatement=simpleStatement | structuredStatement=structuredStatement)
+;
+
+label:
+	integerNumber=integerNumber
+;
+
+integerNumber:
+	(sign=sign)? unsignedInteger=unsignedInteger
+;
+
+sign:
+	'+'|'-'
+;
+
+
+unsignedInteger:
+	INT
+;
+
+
+simpleStatement:{simpleStatement}
+	(assignmentStatement=assignmentStatement | procedureStatement=procedureStatement | gotoStatement=gotoStatement)?
+;
+
+// not in scope
+gotoStatement:
+	
+;
+
+procedureStatement:
+	
+;
+
+assignmentStatement:
+	
+; 
+
+declarationSection:
+	(labelDeclarationSection=labelDeclarationSection)?
+	(constantDefinitionSection=constantDefinitionSection)?
+	(typeDefinitionPart=typeDefinitionSection)?
+	(variableDeclarationSection=variableDeclarationSection)?
+	(
+		(procedureHeading+=procedureHeading ";" procedureBody+=procedureBody |
+		procedureHeading+=procedureHeading ";" directive+=directive |
+		procedureID+=procedureID ";" procedure_body+=procedureBody |
+		
+		functionHeading+=functionHeading ";" function_body+=functionBody |
+		functionHeading+=functionHeading ";" directive+=directive |
+		functionID+=functionID ";" functionBody+=functionBody) ";")*	
+	
+;
+
+variableDeclarationSection:
+	"var" variable_declaration+=variableDeclaration ";" (variable_declaration+=variableDeclaration ";")*
+;
+
+variableDeclaration:
+	identifierList=identifierList ":" type=type
+;
+
+type:
+	typeIdentifier=typeIdentifier | simpleType=simpleType |  
+	structured_type=structuredType | pointerType=pointerType
+;
+
+structuredType:
+	("packed")? unpacked_structured_type=unpackedStructuredType
+;
+
+pointerType:
+	"^" type_identifier=typeIdentifier
+;
+
+
+typeIdentifier:
+	identifier=ID
+;
+
+
+
+typeDefinitionSection:
+	"type" type_definition+=typeDefinition ";" (type_definition+=typeDefinition ";")*
+;
+
+
+labelDeclarationSection:
+	"label" label+=label ("," label+=label)* ";"
+;
+
 
 
 // Rewrite String common Terminal 
 
-terminal string:
+terminal STRINGS:
 	"'" ('a'..'z' |'A'..'Z'|'_'|'0'..'9' | '^' | "?" | "." | "/" | "\\" | "*" | "%" | "&" | "@" | "#" | "(" | ")" | "$" | "=" | "{" | "}" | "[" | "]" | "," | "!" |"|" | "+" | "-")* "'"
 ;
 
 // Multi-line comment
 
-terminal multi_line_comment:
+terminal MULTI_LINE_COMMENT:
 	 '{*' -> '*}' | '(*' -> '*)'
 ;
 
-// Single line comment
+// Single-line comment
 
-terminal single_line_comment:
+terminal SINGLE_LINE_COMMENT:
 	'{' !('\n'|'\r')* '}' ('\r'? '\n')? | SL_COMMENT
 ;
 
