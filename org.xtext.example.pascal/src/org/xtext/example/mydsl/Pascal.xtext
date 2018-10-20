@@ -86,6 +86,19 @@ declarationSection:
 	
 ;
 
+constantDefinitionSection:
+	"const" constantDefinition+=constantDefinition ";" (constantDefinition+=constantDefinition ";")*
+;
+
+constantDefinition:
+	identifier=ID "=" constant=constant
+;
+
+constant:
+	(sign=sign)? (constantIdentifier=ID | number=number) | strings=STRINGS | boolean=boolean
+;
+
+
 variableDeclarationSection:
 	"var" variable_declaration+=variableDeclaration ";" (variable_declaration+=variableDeclaration ";")*
 ;
