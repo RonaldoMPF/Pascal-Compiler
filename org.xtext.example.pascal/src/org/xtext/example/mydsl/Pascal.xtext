@@ -35,6 +35,100 @@ statement:
 	(label=label ":")? (simpleStatement=simpleStatement | structuredStatement=structuredStatement)
 ;
 
+// verify
+structuredStatement:
+	compoundStatement=compoundStatement | repetitiveStatement=repetitiveStatement | conditionalStatement=conditionalStatement | withStatement=withStatement
+	
+;
+
+// verify 
+withStatement:
+	"with" variable+=variable ("," variable+=variable)* "do" statement=statement 
+;
+
+variable:
+	entireVariable=entireVariable 
+	("[" expressionList+=expressionList "]" )*
+	("." fieldIdentifier+=ID)*
+	("^")* ("^")*
+;
+
+expressionList:
+	expression+=expression ("," expression+=expression)*
+;
+
+entireVariable:
+	identifier=ID
+;
+
+
+repetitiveStatement:
+	"repeat" statementSequence=statementSequence "until" expression=expression
+;
+
+expression:
+	simpleExpression+=simpleExpression (relationalOperator=relationalOperator simpleExpression+=simpleExpression)?
+;
+
+relationalOperator:
+	"<" | ">" | "=" | "in" | "<>" | "<=" | ">="
+;
+
+simpleExpression:
+	(sign=sign)? term+=term (additionOperator+=additionOperator term+=term)*
+;
+
+additionOperator:
+	{additionOperator} "or" | sign=sign
+;
+
+term:
+	factor+=factor (multiplicationOperator+=multiplicationOperator factor+=factor)*
+;
+
+multiplicationOperator:
+	"and" | "*" | "/" | "div" | "mod"
+;
+
+// verify
+factor:
+	variable=variable | number=number | strings=STRINGS | set=set | {factor} "nil" | boolean=boolean 
+	| identifier=ID | functionDesignator=functionDesignator | "(" expression=expression ")" | "not" factor=factor 
+;
+
+functionDesignator:
+	functionIdentifier=ID (actualParameterList=actualParameterList)?
+;
+
+actualParameterList:
+	"(" actual_parameter+=actualParameter ("," actual_parameter+=actualParameter)* ")"
+;
+
+actualParameter:
+	actualValue=actualValue | actualVariable=actualVariable | actualProcedure=actualProcedure | actualFunction=actualFunction
+;
+
+actualFunction:
+	functionID=ID
+;
+
+actualProcedure:
+	procedureID=ID
+;
+
+actualVariable:
+	variable=variable
+;
+
+actualValue:
+	expression=expression
+;
+
+
+compoundStatement:
+	"begin" statementSequence=statementSequence "end"
+;
+
 label:
 	integerNumber=integerNumber
 ;
@@ -52,38 +146,93 @@ unsignedInteger:
 	INT
 ;
 
-
+//verify
 simpleStatement:{simpleStatement}
 	(assignmentStatement=assignmentStatement | procedureStatement=procedureStatement | gotoStatement=gotoStatement)?
 ;
 
 // not in scope
 gotoStatement:
-	
+	"goto" label=label
 ;
 
 procedureStatement:
-	
+	procedureID=ID (actualParameterList=actualParameterList)?
 ;
 
 assignmentStatement:
-	
+	(variable=variable | function_identifier=ID) ":=" expression=expression
 ; 
 
 declarationSection:
-	(labelDeclarationSection=labelDeclarationSection)?
+	{declarationSection} (labelDeclarationSection=labelDeclarationSection)?
 	(constantDefinitionSection=constantDefinitionSection)?
 	(typeDefinitionPart=typeDefinitionSection)?
 	(variableDeclarationSection=variableDeclarationSection)?
 	(
 		(procedureHeading+=procedureHeading ";" procedureBody+=procedureBody |
 		procedureHeading+=procedureHeading ";" directive+=directive |
-		procedureID+=procedureID ";" procedure_body+=procedureBody |
+		procedureID+=procedureID ";" procedureBody+=procedureBody |
 		
-		functionHeading+=functionHeading ";" function_body+=functionBody |
+		functionHeading+=functionHeading ";" functionBody+=functionBody |
 		functionHeading+=functionHeading ";" directive+=directive |
 		functionID+=functionID ";" functionBody+=functionBody) ";")*	
 	
+;
+
+functionBody:
+	functionBlock=functionBlock
+;
+
+functionBlock:
+	
+;
+
+functionID:
+	"function" functionID=ID
+;
+
+functionHeading:
+	"function" identifier=ID (formalParameterList=formalParameterList)? ":" resultType=resultType
+;
+
+resultType:
+	typeID=typeIdentifier
+;
+
+formalParameterList:
+	"(" formalParameterSection+=formalParameterSection (";" formalParameterSection+=formalParameterSection)* ")"
+;
+
+formalParameterSection:
+	valueParameterSection=valueParameterSection |
+	variableParameterSection=variableParameterSection |
+	procedureParameterSection=procedureParameterSection |
+	functionParameterSection=functionParameterSection
+;
+
+directive:
+	{directive} "forward" | compilerDefinedDirectives=compilerDefinedDirectives
+;
+
+compilerDefinedDirectives:
+	procedureHeading=procedureHeading
+;
+
+procedureBody:
+	procedureBlock=procedureBlock 
+;
+
+procedureBlock:
+	declarationSection=declarationSection statementSection=statementSection
+;
+
+procedureID:
+	"procedure" identifier=ID
+;
+
+procedureHeading:
+	"procedure" identifier=ID (formalParameterList=formalParameterList)?
 ;
 
 constantDefinitionSection:
@@ -96,6 +245,23 @@ constantDefinition:
 
 constant:
 	(sign=sign)? (constantIdentifier=ID | number=number) | strings=STRINGS | boolean=boolean
+;
+
+boolean:
+	"True" | "False"
+;
+
+number:
+	integerNumber=integerNumber | realNumber=realNumber
+;
+
+realNumber:
+	integerNumberPart1=integerNumber "." (integerNumberPart2=integerNumber)? (scale=scale)? |
+	integerNumber= integerNumber scale=scale
+;
+
+scale:
+	("E" | "e") (sign=sign)? integerNumber=integerNumber
 ;
 
 
@@ -112,9 +278,30 @@ type:
 	structured_type=structuredType | pointerType=pointerType
 ;
 
+simpleType:
+	subrangeType=subrangeType | enumeratedType=enumeratedType
+;
+
+enumeratedType:
+	"(" identifierList=identifierList ")"
+;
+
+subrangeType:
+	lowerBound=lowerBound ".." upperBound=upperBound
+;
+
+upperBound:
+	constant=constant
+;
+
+lowerBound:
+	constant=constant
+;
+
 structuredType:
 	("packed")? unpacked_structured_type=unpackedStructuredType
 ;
+
 
 pointerType:
 	"^" type_identifier=typeIdentifier
@@ -129,6 +316,10 @@ typeIdentifier:
 
 typeDefinitionSection:
 	"type" type_definition+=typeDefinition ";" (type_definition+=typeDefinition ";")*
+;
+
+typeDefinition:
+	identifier=ID "=" type=type
 ;
 
 
