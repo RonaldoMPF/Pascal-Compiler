@@ -2,388 +2,977 @@ grammar org.xtext.example.mydsl.Pascal with org.eclipse.xtext.common.Terminals
 
 generate pascal "http://www.xtext.org/example/mydsl/Pascal"
 
-Pascal:
-	element = program
-;
-
-program:{program}
-	(program_heading=programHeading block=block ".")?
-;
-
-programHeading:
-	"program" identifier=ID "(" identifierList=identifierList ")" ";"
-;
-
-identifierList:
-	identifier+=ID ( "," identifier+=ID )*
-;
-
-block:
-	declarationSection=declarationSection statementSection=statementSection
-;
-
-statementSection:
-	"begin" statementSequence=statementSequence "end"
-;
-
-statementSequence:
-	statement+=statement (";" statement+=statement)*
-;
-
-statement:
-	(label=label ":")? (simpleStatement=simpleStatement | structuredStatement=structuredStatement)
-;
-
-// verify
-structuredStatement:
-	compoundStatement=compoundStatement | repetitiveStatement=repetitiveStatement | withStatement=withStatement
-;
-
-// verify 
-withStatement:
-	"with" variable+=variable ("," variable+=variable)* "do" statement=statement 
-;
-
-variable:
-	entireVariable=entireVariable 
-	("[" expressionList+=expressionList "]" )*
-	("." fieldIdentifier+=ID)*
-	("^")* ("^")*
-;
-
-expressionList:
-	expression+=expression ("," expression+=expression)*
-;
-
-entireVariable:
-	identifier=ID
-;
-
-repetitiveStatement:
-	"repeat" statementSequence=statementSequence "until" expression=expression
-;
-
-expression:
-	simpleExpression+=simpleExpression (relationalOperator=relationalOperator simpleExpression+=simpleExpression)?
-;
-
-relationalOperator:
-	"<" | ">" | "=" | "in" | "<>" | "<=" | ">="
-;
-
-simpleExpression:
-	(sign=sign)? term+=term (additionOperator+=additionOperator term+=term)*
-;
-
-additionOperator:
-	{additionOperator} "or" | sign=sign
-;
-
-term:
-	factor+=factor (multiplicationOperator+=multiplicationOperator factor+=factor)*
-;
-
-multiplicationOperator:
-	"and" | "*" | "/" | "div" | "mod"
-;
-
-// verify
-factor:
-	variable=variable | number=number | strings=STRINGS | {factor} "nil" | boolean=boolean 
-	| identifier=ID | functionDesignator=functionDesignator | "(" expression=expression ")" | "not" factor=factor 
-;
-
-functionDesignator:
-	functionIdentifier=ID (actualParameterList=actualParameterList)?
-;
-
-actualParameterList:
-	"(" actualParameter+=actualParameter ("," actualParameter+=actualParameter)* ")"
-;
-
-actualParameter:
-	actualValue=actualValue | actualVariable=actualVariable | actualProcedure=actualProcedure | actualFunction=actualFunction
-;
-
-actualFunction:
-	functionID=ID
-;
-
-actualProcedure:
-	procedureID=ID
-;
-
-actualVariable:
-	variable=variable
-;
-
-actualValue:
-	expression=expression
-;
-
-compoundStatement:
-	"begin" statementSequence=statementSequence "end"
-;
-
-label:
-	integerNumber=integerNumber
-;
-
-integerNumber:
-	(sign=sign)? unsignedInteger=unsignedInteger
-;
-
-sign:
-	'+'|'-'
-;
-
-unsignedInteger:
-	INT
-;
-
-//verify
-simpleStatement:{simpleStatement}
-	(assignmentStatement=assignmentStatement | procedureStatement=procedureStatement | gotoStatement=gotoStatement)?
-;
-
-// not in scope
-gotoStatement:
-	"goto" label=label
-;
-
-procedureStatement:
-	procedureID=ID (actualParameterList=actualParameterList)?
-;
-
-assignmentStatement:
-	(variable=variable | function_identifier=ID) ":=" expression=expression
-; 
-
-declarationSection:
-	{declarationSection} (labelDeclarationSection=labelDeclarationSection)?
-	(constantDefinitionSection=constantDefinitionSection)?
-	(typeDefinitionPart=typeDefinitionSection)?
-	(variableDeclarationSection=variableDeclarationSection)?
-	(
-		(procedureHeading+=procedureHeading ";" procedureBody+=procedureBody |
-		procedureHeading+=procedureHeading ";" directive+=directive |
-		procedureID+=procedureID ";" procedureBody+=procedureBody |
-		
-		functionHeading+=functionHeading ";" functionBody+=functionBody |
-		functionHeading+=functionHeading ";" directive+=directive |
-		functionID+=functionID ";" functionBody+=functionBody) ";")*
-;
-
-//checar
-functionBody:
-	block=block
-;
-
-functionID:
-	"function" functionID=ID
-;
-
-functionHeading:
-	"function" identifier=ID (formalParameterList=formalParameterList)? ":" resultType=resultType
-;
-
-resultType:
-	typeID=typeIdentifier
-;
-
-formalParameterList:
-	"(" formalParameterSection+=formalParameterSection (";" formalParameterSection+=formalParameterSection)* ")"
-;
-
-formalParameterSection:
-	valueParameterSection=valueParameterSection |
-	variableParameterSection=variableParameterSection |
-	procedureParameterSection=procedureParameterSection |
-	functionParameterSection=functionParameterSection
-;
-
-valueParameterSection:
-	identifierList=identifierList ":" parameterType=parameterType
-;
-
-variableParameterSection:
-	"var" identifierList=identifierList ":" parameterType=parameterType
-;
-
-//checar
-parameterType:
-	typeIdentifier=typeIdentifier
-;
-
-procedureParameterSection:
-	procedureHeading=procedureHeading
-;
-
-functionParameterSection:
-	functionHeading=functionHeading
-;
-
-directive:
-	{directive} "forward" | compilerDefinedDirectives=compilerDefinedDirectives
-;
-
-compilerDefinedDirectives:
-	procedureHeading=procedureHeading
-;
-
-procedureBody:
-	procedureBlock=procedureBlock 
-;
-
-procedureBlock:
-	declarationSection=declarationSection statementSection=statementSection
-;
-
-procedureID:
-	"procedure" identifier=ID
-;
-
-procedureHeading:
-	"procedure" identifier=ID (formalParameterList=formalParameterList)?
-;
-
-constantDefinitionSection:
-	"const" constantDefinition+=constantDefinition ";" (constantDefinition+=constantDefinition ";")*
-;
-
-constantDefinition:
-	identifier=ID "=" constant=constant
-;
-
-constant:
-	(sign=sign)? (constantIdentifier=ID | number=number) | strings=STRINGS | boolean=boolean
-;
-
-boolean:
-	"True" | "False"
-;
-
-number:
-	integerNumber=integerNumber | realNumber=realNumber
-;
-
-realNumber:
-	integerNumberPart1=integerNumber "." (integerNumberPart2=integerNumber)? (scale=scale)? |
-	integerNumber= integerNumber scale=scale
-;
-
-scale:
-	("E" | "e") (sign=sign)? integerNumber=integerNumber
-;
-
-variableDeclarationSection:
-	"var" variableDeclaration+=variableDeclaration ";" (variableDeclaration+=variableDeclaration ";")*
-;
-
-variableDeclaration:
-	identifierList=identifierList ":" type=type
-;
-
-type:
-	typeIdentifier=typeIdentifier | simpleType=simpleType |  
-	structuredType=structuredType | pointerType=pointerType
-;
-
-simpleType:
-	subrangeType=subrangeType | enumeratedType=enumeratedType
-;
-
-enumeratedType:
-	"(" identifierList=identifierList ")"
-;
-
-subrangeType:
-	lowerBound=lowerBound ".." upperBound=upperBound
-;
-
-upperBound:
-	constant=constant
-;
-
-lowerBound:
-	constant=constant
-;
-
-structuredType:
-	("packed")? unpackedStructuredType=unpackedStructuredType
-;
-
-unpackedStructuredType:
-	recordType=recordType	
-;
-
-recordType:
-	"record" fieldList=fieldList "end"
-;
-
-fieldList: {fieldList}
-	( (fixedPart=fixedPart (";" variantPart=variantPart)? | variantPart=variantPart) (";")? )?
-;
-
-fixedPart:
-	recordSection+=recordSection (";" recordSection+=recordSection)*
-;
-
-recordSection:
-	identifierList=identifierList ":" type=type
-;
-
-variantPart:
-	"case" tagField=tagField typeIdentifier=typeIdentifier "of" variant+=variant (";" variant+=variant)*
-;
-
-variant:
-	caseLabelList=caseLabelList ":" "(" fieldList=fieldList ")"
-;
-
-caseLabelList:
-	constant+=constant ("," constant+=constant)*
-;
-
-tagField: {tagField}
-	(identifier=ID ":")?
-;
-
-pointerType:
-	"^" typeIdentifier=typeIdentifier
-;
-
-typeIdentifier:
-	identifier=ID
-;
-
-typeDefinitionSection:
-	"type" typeDefinition+=typeDefinition ";" (typeDefinition+=typeDefinition ";")*
-;
-
-typeDefinition:
-	identifier=ID "=" type=type
-;
-
-labelDeclarationSection:
-	"label" label+=label ("," label+=label)* ";"
-;
-
-// Rewrite String common Terminal 
-
-terminal STRINGS:
-	"'" ('a'..'z' |'A'..'Z'|'_'|'0'..'9' | '^' | "?" | "." | "/" | "\\" | "*" | "%" | "&" | "@" | "#" | "(" | ")" | "$" | "=" | "{" | "}" | "[" | "]" | "," | "!" |"|" | "+" | "-")* "'"
-;
-
-// Multi-line comment
-
-terminal MULTI_LINE_COMMENT:
-	 '{*' -> '*}' | '(*' -> '*)'
-;
-
-// Single-line comment
-
-terminal SINGLE_LINE_COMMENT:
-	'{' !('\n'|'\r')* '}' ('\r'? '\n')?
-;
+programStart
+   : (programHeading=programHeading (interface=INTERFACE)? block=block dotTerminal=DOT)?
+   ;
+
+programHeading
+   : program=PROGRAM ID=identifier (lParen=LPAREN identifierList=identifierList rparen=RPAREN)? semiTerminal=SEMI
+   | {programHeading} unit=UNIT ID=identifier semiTerminal=SEMI
+   ;
+
+identifier
+   : ID=IDENT
+   ;
+
+block
+   : (labelDeclarationPart=labelDeclarationPart | constantDefinitionPart=constantDefinitionPart | typeDefinitionPart=typeDefinitionPart 
+   	| variableDeclarationPart=variableDeclarationPart 
+   	| procedureAndFunctionDeclarationPart=procedureAndFunctionDeclarationPart | usesUnitsPart=usesUnitsPart | ImplemeTerminal=IMPLEMENTATION
+   )* compoundStatement=compoundStatement
+   ;
+
+usesUnitsPart
+   : usesTerminal=USES identifierList=identifierList semiTerminal=SEMI
+   ;
+
+labelDeclarationPart
+   : labelTerminal=LABEL labelStart1=labelStart (commaTerminal=COMMA labelStart2=labelStart)* semiTerminal=SEMI
+   ;
+
+labelStart
+   : unsignedInteger=unsignedInteger
+   ;
+
+constantDefinitionPart
+   : constTerminal=CONST (constantDefinition=constantDefinition semiTerminal=SEMI) +
+   ;
+
+constantDefinition
+   : ID=identifier equalTerminal=EQUAL constant=constant
+   ;
+
+constantChr
+   : chRTerminal=CHR lParen=LPAREN unsignedInteger=unsignedInteger rParen=RPAREN
+   ;
+
+constant
+   : unsignedNumber=unsignedNumber
+   | sign1=sign unsignedNumber=unsignedNumber
+   | ID1=identifier
+   | sign2=sign ID2=identifier
+   | string=StringStart
+   | constantChr=constantChr
+   ;
+
+unsignedNumber
+   : unsignedInteger=unsignedInteger
+   | unsignedReal=unsignedReal
+   ;
+
+unsignedInteger
+   : unsignedInteger=NUM_INT
+   ;
+
+unsignedReal
+   : unsignedReal=NUM_REAL
+   ;
+
+sign
+   : sign= (PLUS | MINUS)
+   ;
+
+bool
+   : bool= ( TRUE | FALSE)
+   ;
+
+StringStart
+   : StringStart=STRING_LITERAL
+   ;
+
+typeDefinitionPart
+   : typeTerminal=TYPE (typeDefinition=typeDefinition semiTerminal=SEMI) +
+   ;
+
+typeDefinition
+   : ID1=identifier equalTerminal=EQUAL type = (typeStart | functionType | procedureType)
+   ;
+
+functionType
+   : functionTerminal=FUNCTION (formalParameterList=formalParameterList)? colonTerminal=COLON resultType=resultType
+   ;
+
+procedureType
+   : procedureTerminal=PROCEDURE (formalParameterList=formalParameterList)?
+   ;
+
+typeStart
+   : typeStart = (simpleType | structuredType| pointerType)
+   ;
+
+simpleType
+   : simpleType= (scalarType
+   | subrangeType
+   | typeIdentifier
+   | stringtype)
+   ;
+
+scalarType
+   : lParen=LPAREN identifierList=identifierList rParen=RPAREN
+   ;
+
+subrangeType
+   : constant1=constant dotTerminal=DOTDOT constan2=constant
+   ;
+
+typeIdentifier
+   : ID=identifier | type=(CHAR | BOOLEAN | INTEGER | REAL | STRING)
+   ;
+
+structuredType
+   : packedTerminal=PACKED unpackedStructuredType1=unpackedStructuredType
+   | unpackedStructuredType2=unpackedStructuredType
+   ;
+
+unpackedStructuredType
+   : unpackedStructuredType=(arrayType
+   | recordType
+   | setType
+   | fileType)
+   ;
+
+stringtype
+   : stringTerminal=STRING lBrack=LBRACK (ID=identifier | unsignedNumber=unsignedNumber) rBrack=RBRACK
+   ;
+
+arrayType
+   : arrayTerminal=ARRAY lBrack=LBRACK typeList=typeList rBrack=RBRACK ofTerminal=OF componentType=componentType
+   | arrayTerminal=ARRAY lBrack2=LBRACK2 typeList=typeList rBrack2=RBRACK2 ofTerminal=OF componentType=componentType
+   ;
+
+typeList
+   : indexType=indexType (commaTerminal=COMMA indexType=indexType)*
+   ;
+
+indexType
+   : simpleType=simpleType
+   ;
+
+componentType
+   : typeStart=typeStart
+   ;
+
+recordType
+   : recordTerminal=RECORD (fieldList=fieldList)? endTerminal=END
+   ;
+
+fieldList
+   : fixedPart=fixedPart (semiTerminal=SEMI variantPart1=variantPart)?
+   | variantPart2=variantPart
+   ;
+
+fixedPart
+   : recordSection (semiTerminal=SEMI recordSection=recordSection)*
+   ;
+
+recordSection
+   : identifierList=identifierList colonTerminal=COLON typeStart=typeStart
+   ;
+
+variantPart
+   : caseTerminal=CASE tag=tag ofTerminal=OF variant=variant (SemiTerminal=SEMI variant=variant)*
+   ;
+
+tag
+   : ID=identifier colonTerminal=COLON typeIdentifier1=typeIdentifier
+   | typeIdentifier2=typeIdentifier
+   ;
+
+variant
+   : constList=constList colonTerminal=COLON lParen=LPAREN fieldList=fieldList rParen=RPAREN
+   ;
+
+setType
+   : SET OF baseType
+   ;
+
+baseType
+   : simpleType
+   ;
+
+fileType
+   : FILE OF typeStart
+   | FILE
+   ;
+
+pointerType
+   : POINTER typeIdentifier
+   ;
+
+variableDeclarationPart
+   : VAR variableDeclaration (SEMI variableDeclaration)* SEMI
+   ;
+
+variableDeclaration
+   : identifierList COLON typeStart
+   ;
+
+procedureAndFunctionDeclarationPart
+   : procedureOrFunctionDeclaration=procedureOrFunctionDeclaration semiTerminal=SEMI
+   ;
+
+procedureOrFunctionDeclaration
+   : procedureDeclaration
+   | functionDeclaration
+   ;
+
+procedureDeclaration
+   : PROCEDURE identifier (formalParameterList)? SEMI block
+   ;
+
+formalParameterList
+   : LPAREN formalParameterSection (SEMI formalParameterSection)* RPAREN
+   ;
+
+formalParameterSection
+   : parameterGroup
+   | VAR parameterGroup
+   | FUNCTION parameterGroup
+   | PROCEDURE parameterGroup
+   ;
+
+parameterGroup
+   : identifierList COLON typeIdentifier
+   ;
+
+identifierList
+   : identifier (COMMA identifier)*
+   ;
+
+constList
+   : constant (COMMA constant)*
+   ;
+
+functionDeclaration
+   : FUNCTION identifier (formalParameterList)? COLON resultType SEMI block
+   ;
+
+resultType
+   : typeIdentifier
+   ;
+
+statement
+   : labelStart COLON unlabelledStatement
+   | unlabelledStatement
+   ;
+
+unlabelledStatement
+   : {unlabelledStatement} simpleStatement
+   | structuredStatement
+   ;
+
+simpleStatement
+   : assignmentStatement
+   | procedureStatement
+   | gotoStatement
+   | emptyStatement
+   ;
+
+assignmentStatement
+   : variable ASSIGN expression
+   ;
+
+variable
+   : (AT identifier | identifier) (LBRACK expression (COMMA expression)* RBRACK | LBRACK2 expression (COMMA expression)* RBRACK2 | DOT identifier | POINTER)*
+   ;
+
+expression
+   : simpleExpression (relationaloperator expression)?
+   ;
+
+relationaloperator
+   : EQUAL
+   | NOT_EQUAL
+   | LT
+   | LE
+   | GE
+   | GT
+   | IN
+   ;
+
+simpleExpression
+   : term (additiveoperator simpleExpression)?
+   ;
+
+additiveoperator
+   : PLUS
+   | MINUS
+   | OR
+   ;
+
+term
+   : signedFactor (multiplicativeoperator term)?
+   ;
+
+multiplicativeoperator
+   : STAR
+   | SLASH
+   | DIV
+   | MOD
+   | AND
+   ;
+
+signedFactor
+   : (PLUS | MINUS)? factor
+   ;
+
+factor
+   : variable
+   | LPAREN expression RPAREN
+   | functionDesignator
+   | unsignedConstant
+   | setStart
+   | NOT factor
+   | bool
+   ;
+
+unsignedConstant
+   : unsignedNumber
+   | constantChr
+   | StringStart
+   | NIL
+   ;
+
+functionDesignator
+   : identifier LPAREN parameterList RPAREN
+   ;
+
+parameterList
+   : actualParameter (COMMA actualParameter)*
+   ;
+
+setStart
+   : LBRACK elementList RBRACK
+   | LBRACK2 elementList RBRACK2
+   ;
+
+elementList
+   : element (COMMA element)*
+   ;
+
+element
+   : expression (DOTDOT expression)?
+   ;
+
+procedureStatement
+   : identifier (LPAREN parameterList RPAREN)?
+   ;
+
+actualParameter
+   : expression
+   ;
+
+gotoStatement
+   : GOTO labelStart
+   ;
+
+emptyStatement
+   :" "
+   ;
+
+empty
+   :
+   /* empty */
+   " "
+   ;
+
+structuredStatement
+   : compoundStatement
+   | conditionalStatement
+   | repetetiveStatement
+   | withStatement
+   ;
+
+compoundStatement
+   : BEGIN statements END
+   ;
+
+statements
+   : statement1=statement (SEMI statement2=statement)*
+   ;
+
+conditionalStatement
+   : ifStatement
+   | caseStatement
+   ;
+
+ifStatement
+   : ifTerminal=IF expression=expression thenTerminal=THEN statement1=statement (colon=COLON elseTerminal=ELSE statement2=statement)?
+   ;
+
+caseStatement
+   : caseTerminal=CASE expression=expression of=OF caseListElement1=caseListElement (semi1=SEMI caseListElement2=caseListElement)* (semi2=SEMI elseTerminal=ELSE statement=statements)? END
+   ;
+
+caseListElement
+   : constList=constList colonTerminal=COLON statemente=statement
+   ;
+
+repetetiveStatement
+   : whileStatement
+   | repeatStatement
+   | forStatement
+   ;
+
+whileStatement
+   : whileTerminal=WHILE expression=expression doTerminal=DO statement=statement
+   ;
+
+repeatStatement
+   : repeatTerminal=REPEAT statement=statements UNTIL expression
+   ;
+
+forStatement
+   : forTerminal=FOR identifier=identifier assignTerminal=ASSIGN forList=forList doTerminal=DO statement=statement
+   ;
+
+forList
+   : initialValue (TO | DOWNTO) finalValue
+   ;
 
+initialValue
+   : expression
+   ;
+
+finalValue
+   : expression
+   ;
+
+withStatement
+   : withTerminal=WITH recordVariableList=recordVariableList do=DO statement=statement
+   ;
+
+recordVariableList
+   : variable (COMMA variable)*
+   ;
+
+
+fragment A
+   : ('a' | 'A')
+   ;
+
+
+fragment B
+   : ('b' | 'B')
+   ;
+
+
+fragment C
+   : ('c' | 'C')
+   ;
+
+
+fragment D
+   : ('d' | 'D')
+   ;
+
+
+fragment E
+   : ('e' | 'E')
+   ;
+
+
+fragment F
+   : ('f' | 'F')
+   ;
+
+
+fragment G
+   : ('g' | 'G')
+   ;
+
+
+fragment H
+   : ('h' | 'H')
+   ;
+
+
+fragment I
+   : ('i' | 'I')
+   ;
+
+
+fragment J
+   : ('j' | 'J')
+   ;
+
+
+fragment K
+   : ('k' | 'K')
+   ;
+
+
+fragment L
+   : ('l' | 'L')
+   ;
+
+
+fragment M
+   : ('m' | 'M')
+   ;
+
+
+fragment N
+   : ('n' | 'N')
+   ;
+
+
+fragment O
+   : ('o' | 'O')
+   ;
+
+
+fragment P
+   : ('p' | 'P')
+   ;
+
+
+fragment Q
+   : ('q' | 'Q')
+   ;
+
+
+fragment R
+   : ('r' | 'R')
+   ;
+
+
+fragment S
+   : ('s' | 'S')
+   ;
+
+
+fragment T
+   : ('t' | 'T')
+   ;
+
+
+fragment U
+   : ('u' | 'U')
+   ;
+
+
+fragment V
+   : ('v' | 'V')
+   ;
+
+
+fragment W
+   : ('w' | 'W')
+   ;
+
+
+fragment X
+   : ('x' | 'X')
+   ;
+
+
+fragment Y
+   : ('y' | 'Y')
+   ;
+
+
+fragment Z
+   : ('z' | 'Z')
+   ;
+
+
+terminal AND
+   : "and"
+   ;
+
+
+terminal ARRAY
+   : "array"
+   ;
+
+
+terminal BEGIN
+   : "begin"
+   ;
+
+
+terminal BOOLEAN
+   : "Boolean"
+   ;
+
+
+terminal CASE
+   : "case"
+   ;
+
+
+terminal CHAR
+   : "Char"
+   ;
+
+
+terminal CHR
+   : "chr"
+   ;
+
+
+terminal CONST
+   : "const"
+   ;
+
+
+terminal DIV
+   : "div"
+   ;
+
+
+terminal DO
+   : "do"
+   ;
+
+
+terminal DOWNTO
+   : "downto"
+   ;
+
+
+terminal ELSE
+   : "else"
+   ;
+
+
+terminal END
+   : "end"
+   ;
+
+
+terminal FILE
+   : "file"
+   ;
+
+
+terminal FOR
+   : "for"
+   ;
+
+
+terminal FUNCTION
+   : "function"
+   ;
+
+
+terminal GOTO
+   : "goto"
+   ;
+
+
+terminal IF
+   : "if"
+   ;
+
+
+terminal IN
+   : "in"
+   ;
+
+
+terminal INTEGER
+   : "Integer"
+   ;
+
+
+terminal LABEL
+   : "label"
+   ;
+
+
+terminal MOD
+   : "mod"
+   ;
+
+
+terminal NIL
+   : "nil"
+   ;
+
+
+terminal NOT
+   : "not"
+   ;
+
+
+terminal OF
+   : "of"
+   ;
+
+
+terminal OR
+   : "or"
+   ;
+
+
+terminal PACKED
+   : "packed"
+   ;
+
+
+terminal PROCEDURE
+   : "procedure"
+   ;
+
+
+terminal PROGRAM
+   : "program"
+   ;
+
+
+terminal REAL
+   : "real"
+   ;
+
+
+terminal RECORD
+   : "record"
+   ;
+
+
+terminal REPEAT
+   : "repeat"
+   ;
+
+
+terminal SET
+   : "set"
+   ;
+
+
+terminal THEN
+   : "then"
+   ;
+
+
+terminal TO
+   : "to"
+   ;
+
+
+terminal TYPE
+   : "type"
+   ;
+
+
+terminal UNTIL
+   : "until"
+   ;
+
+
+terminal VAR
+   : "Var"
+   ;
+
+
+terminal WHILE
+   : "while"
+   ;
+
+
+terminal WITH
+   : "with"
+   ;
+
+
+terminal PLUS
+   : '+'
+   ;
+
+
+terminal MINUS
+   : '-'
+   ;
+
+
+terminal STAR
+   : '*'
+   ;
+
+
+terminal SLASH
+   : '/'
+   ;
+
+
+terminal ASSIGN
+   : ':='
+   ;
+
+
+terminal COMMA
+   : ','
+   ;
+
+
+terminal SEMI
+   : ';'
+   ;
+
+
+terminal COLON
+   : ':'
+   ;
+
+
+terminal EQUAL
+   : '='
+   ;
+
+
+terminal NOT_EQUAL
+   : '<>'
+   ;
+
+
+terminal LT
+   : '<'
+   ;
+
+
+terminal LE
+   : '<='
+   ;
+
+
+terminal GE
+   : '>='
+   ;
+
+
+terminal GT
+   : '>'
+   ;
+
+
+terminal LPAREN
+   : '('
+   ;
+
+
+terminal RPAREN
+   : ')'
+   ;
+
+
+terminal LBRACK
+   : '['
+   ;
+
+
+terminal LBRACK2
+   : '(.'
+   ;
+
+
+terminal RBRACK
+   : ']'
+   ;
+
+
+terminal RBRACK2
+   : '.)'
+   ;
+
+
+terminal POINTER
+   : '^'
+   ;
+
+
+terminal AT
+   : '@'
+   ;
+
+
+terminal DOT
+   : '.'
+   ;
+
+
+terminal DOTDOT
+   : '..'
+   ;
+
+
+terminal LCURLY
+   : '{'
+   ;
+
+
+terminal RCURLY
+   : '}'
+   ;
+
+
+terminal UNIT
+   : "unit"
+   ;
+
+
+terminal INTERFACE
+   : "interface"
+   ;
+
+
+terminal USES
+   : "uses"
+   ;
+
+
+terminal STRING_DEF
+   : "String"
+   ;
+
+
+terminal IMPLEMENTATION
+   : "implementation"
+   ;
+
+
+terminal TRUE
+   : "true"
+   ;
+
+
+terminal FALSE
+   : "false"
+   ;
+
+
+
+terminal COMMENT_1
+   : '(*' -> '*)' 
+   ;
+
+
+terminal COMMENT_2
+   : '{' -> '}'  
+   ;
+
+
+terminal IDENT
+   : ('a' .. 'z' | 'A' .. 'Z') ('a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_')*
+   ;
+
+
+terminal STRING_LITERAL
+   : '\'' //('\'\'' | ('\''))* '\''   	
+   ;
+
+
+terminal NUM_INT
+   : INT
+   ;
+
+
+terminal NUM_REAL
+   : //('0' .. '9') + (('.' ('0' .. '9') + (EXPONENT)?)? | EXPONENT)
+   		(NUM_INT) + (('.' NUM_INT + (EXPONENT)?)? | EXPONENT)
+   ;
+
+
+terminal fragment EXPONENT
+   : ('e') ('+' | '-')? ('0' .. '9') +
