@@ -384,6 +384,6 @@ terminal MULTI_LINE_COMMENT:
 // Single-line comment
 
 terminal SINGLE_LINE_COMMENT:
-	'{' !('\n'|'\r')* '}' ('\r'? '\n')? | SL_COMMENT
+	'{' !('\n'|'\r')* '}' ('\r'? '\n')?
 ;
 
