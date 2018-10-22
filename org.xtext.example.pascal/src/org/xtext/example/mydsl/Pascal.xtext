@@ -6,7 +6,6 @@ Pascal:
 	element = program
 ;
 
-
 program:{program}
 	(program_heading=programHeading block=block ".")?
 ;
@@ -37,8 +36,7 @@ statement:
 
 // verify
 structuredStatement:
-	compoundStatement=compoundStatement | repetitiveStatement=repetitiveStatement | conditionalStatement=conditionalStatement | withStatement=withStatement
-	
+	compoundStatement=compoundStatement | repetitiveStatement=repetitiveStatement | withStatement=withStatement
 ;
 
 // verify 
@@ -60,7 +58,6 @@ expressionList:
 entireVariable:
 	identifier=ID
 ;
-
 
 repetitiveStatement:
 	"repeat" statementSequence=statementSequence "until" expression=expression
@@ -92,7 +89,7 @@ multiplicationOperator:
 
 // verify
 factor:
-	variable=variable | number=number | strings=STRINGS | set=set | {factor} "nil" | boolean=boolean 
+	variable=variable | number=number | strings=STRINGS | {factor} "nil" | boolean=boolean 
 	| identifier=ID | functionDesignator=functionDesignator | "(" expression=expression ")" | "not" factor=factor 
 ;
 
@@ -101,7 +98,7 @@ functionDesignator:
 ;
 
 actualParameterList:
-	"(" actual_parameter+=actualParameter ("," actual_parameter+=actualParameter)* ")"
+	"(" actualParameter+=actualParameter ("," actualParameter+=actualParameter)* ")"
 ;
 
 actualParameter:
@@ -124,7 +121,6 @@ actualValue:
 	expression=expression
 ;
 
-
 compoundStatement:
 	"begin" statementSequence=statementSequence "end"
 ;
@@ -140,7 +136,6 @@ integerNumber:
 sign:
 	'+'|'-'
 ;
-
 
 unsignedInteger:
 	INT
@@ -176,16 +171,12 @@ declarationSection:
 		
 		functionHeading+=functionHeading ";" functionBody+=functionBody |
 		functionHeading+=functionHeading ";" directive+=directive |
-		functionID+=functionID ";" functionBody+=functionBody) ";")*	
-	
+		functionID+=functionID ";" functionBody+=functionBody) ";")*
 ;
 
+//checar
 functionBody:
-	functionBlock=functionBlock
-;
-
-functionBlock:
-	
+	block=block
 ;
 
 functionID:
@@ -209,6 +200,27 @@ formalParameterSection:
 	variableParameterSection=variableParameterSection |
 	procedureParameterSection=procedureParameterSection |
 	functionParameterSection=functionParameterSection
+;
+
+valueParameterSection:
+	identifierList=identifierList ":" parameterType=parameterType
+;
+
+variableParameterSection:
+	"var" identifierList=identifierList ":" parameterType=parameterType
+;
+
+//checar
+parameterType:
+	typeIdentifier=typeIdentifier
+;
+
+procedureParameterSection:
+	procedureHeading=procedureHeading
+;
+
+functionParameterSection:
+	functionHeading=functionHeading
 ;
 
 directive:
@@ -264,9 +276,8 @@ scale:
 	("E" | "e") (sign=sign)? integerNumber=integerNumber
 ;
 
-
 variableDeclarationSection:
-	"var" variable_declaration+=variableDeclaration ";" (variable_declaration+=variableDeclaration ";")*
+	"var" variableDeclaration+=variableDeclaration ";" (variableDeclaration+=variableDeclaration ";")*
 ;
 
 variableDeclaration:
@@ -275,7 +286,7 @@ variableDeclaration:
 
 type:
 	typeIdentifier=typeIdentifier | simpleType=simpleType |  
-	structured_type=structuredType | pointerType=pointerType
+	structuredType=structuredType | pointerType=pointerType
 ;
 
 simpleType:
@@ -299,35 +310,64 @@ lowerBound:
 ;
 
 structuredType:
-	("packed")? unpacked_structured_type=unpackedStructuredType
+	("packed")? unpackedStructuredType=unpackedStructuredType
 ;
 
+unpackedStructuredType:
+	recordType=recordType	
+;
+
+recordType:
+	"record" fieldList=fieldList "end"
+;
+
+fieldList: {fieldList}
+	( (fixedPart=fixedPart (";" variantPart=variantPart)? | variantPart=variantPart) (";")? )?
+;
+
+fixedPart:
+	recordSection+=recordSection (";" recordSection+=recordSection)*
+;
+
+recordSection:
+	identifierList=identifierList ":" type=type
+;
+
+variantPart:
+	"case" tagField=tagField typeIdentifier=typeIdentifier "of" variant+=variant (";" variant+=variant)*
+;
+
+variant:
+	caseLabelList=caseLabelList ":" "(" fieldList=fieldList ")"
+;
+
+caseLabelList:
+	constant+=constant ("," constant+=constant)*
+;
+
+tagField: {tagField}
+	(identifier=ID ":")?
+;
 
 pointerType:
-	"^" type_identifier=typeIdentifier
+	"^" typeIdentifier=typeIdentifier
 ;
-
 
 typeIdentifier:
 	identifier=ID
 ;
 
-
-
 typeDefinitionSection:
-	"type" type_definition+=typeDefinition ";" (type_definition+=typeDefinition ";")*
+	"type" typeDefinition+=typeDefinition ";" (typeDefinition+=typeDefinition ";")*
 ;
 
 typeDefinition:
 	identifier=ID "=" type=type
 ;
 
-
 labelDeclarationSection:
 	"label" label+=label ("," label+=label)* ";"
 ;
-
-
 
 // Rewrite String common Terminal 
 
