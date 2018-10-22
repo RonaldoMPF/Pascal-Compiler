@@ -141,7 +141,7 @@ arrayType
    ;
 
 typeList
-   : indexType=indexType (commaTerminal=COMMA indexType=indexType)*
+   : indexType=indexType (COMMA indexType=indexType)*
    ;
 
 indexType
@@ -153,131 +153,131 @@ componentType
    ;
 
 recordType
-   : recordTerminal=RECORD (fieldList=fieldList)? endTerminal=END
+   : RECORD (fieldList=fieldList)? END
    ;
 
 fieldList
-   : fixedPart=fixedPart (semiTerminal=SEMI variantPart1=variantPart)?
+   : fixedPart=fixedPart (SEMI variantPart1=variantPart)?
    | variantPart2=variantPart
    ;
 
 fixedPart
-   : recordSection (semiTerminal=SEMI recordSection=recordSection)*
+   : recordSection (SEMI recordSection=recordSection)*
    ;
 
 recordSection
-   : identifierList=identifierList colonTerminal=COLON typeStart=typeStart
+   : identifierList=identifierList COLON typeStart=typeStart
    ;
 
 variantPart
-   : caseTerminal=CASE tag=tag ofTerminal=OF variant=variant (SemiTerminal=SEMI variant=variant)*
+   : CASE tag=tag OF variant=variant (SEMI variant=variant)*
    ;
 
 tag
-   : ID=identifier colonTerminal=COLON typeIdentifier1=typeIdentifier
+   : ID=identifier COLON typeIdentifier1=typeIdentifier
    | typeIdentifier2=typeIdentifier
    ;
 
 variant
-   : constList=constList colonTerminal=COLON lParen=LPAREN fieldList=fieldList rParen=RPAREN
+   : constList=constList COLON LPAREN fieldList=fieldList RPAREN
    ;
 
 setType
-   : SET OF baseType
+   : SET OF baseType=baseType
    ;
 
 baseType
-   : simpleType
+   : simpleType=simpleType
    ;
 
 fileType
-   : FILE OF typeStart
+   : FILE OF typeStart=typeStart
    | FILE
    ;
 
 pointerType
-   : POINTER typeIdentifier
+   : POINTER typeIdentifier=typeIdentifier
    ;
 
 variableDeclarationPart
-   : VAR variableDeclaration (SEMI variableDeclaration)* SEMI
+   : VAR variableDeclaration1=variableDeclaration (SEMI variableDeclaration2=variableDeclaration)* SEMI
    ;
 
 variableDeclaration
-   : identifierList COLON typeStart
+   : identifierList=identifierList COLON typeStart=typeStart
    ;
 
 procedureAndFunctionDeclarationPart
-   : procedureOrFunctionDeclaration=procedureOrFunctionDeclaration semiTerminal=SEMI
+   : procedureOrFunctionDeclaration=procedureOrFunctionDeclaration SEMI
    ;
 
 procedureOrFunctionDeclaration
-   : procedureDeclaration
-   | functionDeclaration
+   : procedureDeclaration=procedureDeclaration
+   | functionDeclaration=functionDeclaration
    ;
 
 procedureDeclaration
-   : PROCEDURE identifier (formalParameterList)? SEMI block
+   : procedureTerminal=PROCEDURE identifier=identifier (formalParameterList=formalParameterList)? SEMI block=block
    ;
 
 formalParameterList
-   : LPAREN formalParameterSection (SEMI formalParameterSection)* RPAREN
+   : LPAREN formalParameterSection1=formalParameterSection (SEMI formalParameterSection2=formalParameterSection)* RPAREN
    ;
 
 formalParameterSection
-   : parameterGroup
-   | VAR parameterGroup
-   | FUNCTION parameterGroup
-   | PROCEDURE parameterGroup
+   : parameterGroup=parameterGroup
+   | varTerminal=VAR parameterGroup=parameterGroup
+   | functionTerminal=FUNCTION parameterGroup=parameterGroup
+   | procedureTerminal=PROCEDURE parameterGroup=parameterGroup
    ;
 
 parameterGroup
-   : identifierList COLON typeIdentifier
+   : identifierList=identifierList COLON typeIdentifier=typeIdentifier
    ;
 
 identifierList
-   : identifier (COMMA identifier)*
+   : identifier=identifier (COMMA identifier=identifier)*
    ;
 
 constList
-   : constant (COMMA constant)*
+   : constant=constant (COMMA constant=constant)*
    ;
 
 functionDeclaration
-   : FUNCTION identifier (formalParameterList)? COLON resultType SEMI block
+   : functionTerminal=FUNCTION identifier=identifier (formalParameterList=formalParameterList)? COLON resultType=resultType SEMI block=block
    ;
 
 resultType
-   : typeIdentifier
+   : typeIdentifier=typeIdentifier
    ;
 
 statement
-   : labelStart COLON unlabelledStatement
-   | unlabelledStatement
+   : labelStart=labelStart COLON unlabelledStatement=unlabelledStatement
+   | unlabelledStatement=unlabelledStatement
    ;
 
 unlabelledStatement
-   : {unlabelledStatement} simpleStatement
-   | structuredStatement
+   : {unlabelledStatement} simpleStatement=simpleStatement
+   | structuredStatement=structuredStatement
    ;
 
 simpleStatement
-   : assignmentStatement
-   | procedureStatement
-   | gotoStatement
-   | emptyStatement
+   : assignmentStatement=assignmentStatement
+   | procedureStatement=procedureStatement
+   | gotoStatement=gotoStatement
+   | emptyStatement=emptyStatement
    ;
 
 assignmentStatement
-   : variable ASSIGN expression
+   : variable=variable ASSIGN expression=expression
    ;
 
 variable
-   : (AT identifier | identifier) (LBRACK expression (COMMA expression)* RBRACK | LBRACK2 expression (COMMA expression)* RBRACK2 | DOT identifier | POINTER)*
+   : (AT identifier1=identifier | identifier2=identifier) (LBRACK expression=expression (COMMA expression=expression)* RBRACK | LBRACK2 expression=expression (COMMA expression=expression)* RBRACK2 | DOT identifier=identifier | POINTER)*
    ;
 
 expression
-   : simpleExpression (relationaloperator expression)?
+   : simpleExpression=simpleExpression (relationaloperator expression=expression)?
    ;
 
 relationaloperator
@@ -291,7 +291,7 @@ relationaloperator
    ;
 
 simpleExpression
-   : term (additiveoperator simpleExpression)?
+   : term=term (additiveoperator simpleExpression=simpleExpression)?
    ;
 
 additiveoperator
@@ -301,7 +301,7 @@ additiveoperator
    ;
 
 term
-   : signedFactor (multiplicativeoperator term)?
+   : signedFactor=signedFactor (multiplicativeoperator term=term)?
    ;
 
 multiplicativeoperator
@@ -313,57 +313,57 @@ multiplicativeoperator
    ;
 
 signedFactor
-   : (PLUS | MINUS)? factor
+   : (PLUS | MINUS)? factor=factor
    ;
 
 factor
-   : variable
-   | LPAREN expression RPAREN
-   | functionDesignator
-   | unsignedConstant
-   | setStart
-   | NOT factor
-   | bool
+   : variable=variable
+   | LPAREN expression=expression RPAREN
+   | functionDesignator=functionDesignator
+   | unsignedConstant=unsignedConstant
+   | setStart=setStart
+   | NOT factor=factor
+   | bool=bool
    ;
 
 unsignedConstant
-   : unsignedNumber
-   | constantChr
-   | StringStart
+   : unsignedNumber=unsignedNumber
+   | constantChr=constantChr
+   | StringStart=StringStart
    | NIL
    ;
 
 functionDesignator
-   : identifier LPAREN parameterList RPAREN
+   : identifier=identifier LPAREN parameterList=parameterList RPAREN
    ;
 
 parameterList
-   : actualParameter (COMMA actualParameter)*
+   : actualParameter1=actualParameter (COMMA actualParameter2=actualParameter)*
    ;
 
 setStart
-   : LBRACK elementList RBRACK
-   | LBRACK2 elementList RBRACK2
+   : LBRACK elementList=elementList RBRACK
+   | LBRACK2 elementList=elementList RBRACK2
    ;
 
 elementList
-   : element (COMMA element)*
+   : element1=element (COMMA element2=element)*
    ;
 
 element
-   : expression (DOTDOT expression)?
+   : expression1=expression (DOTDOT expression2=expression)?
    ;
 
 procedureStatement
-   : identifier (LPAREN parameterList RPAREN)?
+   : identifier=identifier (LPAREN parameterList=parameterList RPAREN)?
    ;
 
 actualParameter
-   : expression
+   : expression=expression
    ;
 
 gotoStatement
-   : GOTO labelStart
+   : GOTO labelStart=labelStart
    ;
 
 emptyStatement
@@ -377,14 +377,14 @@ empty
    ;
 
 structuredStatement
-   : compoundStatement
-   | conditionalStatement
-   | repetetiveStatement
-   | withStatement
+   : compoundStatement=compoundStatement
+   | conditionalStatement=conditionalStatement
+   | repetetiveStatement=repetetiveStatement
+   | withStatement=withStatement
    ;
 
 compoundStatement
-   : BEGIN statements END
+   : BEGIN statements=statements END
    ;
 
 statements
@@ -392,8 +392,8 @@ statements
    ;
 
 conditionalStatement
-   : ifStatement
-   | caseStatement
+   : ifStatement=ifStatement
+   | caseStatement=caseStatement
    ;
 
 ifStatement
@@ -405,7 +405,7 @@ caseStatement
    ;
 
 caseListElement
-   : constList=constList colonTerminal=COLON statemente=statement
+   : constList=constList colonTerminal=COLON statement=statement
    ;
 
 repetetiveStatement
@@ -427,7 +427,7 @@ forStatement
    ;
 
 forList
-   : initialValue (TO | DOWNTO) finalValue
+   : initialValue=initialValue (TO | DOWNTO) finalValue=finalValue
    ;
 
 initialValue
@@ -443,7 +443,7 @@ withStatement
    ;
 
 recordVariableList
-   : variable (COMMA variable)*
+   : variable1=variable (COMMA variable2=variable)*
    ;
 
 
@@ -976,3 +976,4 @@ terminal NUM_REAL
 
 terminal fragment EXPONENT
    : ('e') ('+' | '-')? ('0' .. '9') +
+   ;
