@@ -2,6 +2,10 @@ grammar org.xtext.example.mydsl.Pascal with org.eclipse.xtext.common.Terminals
 
 generate pascal "http://www.xtext.org/example/mydsl/Pascal"
 
+toBegin:
+	elements += programStart
+;
+
 programStart
    : (programHeading=programHeading (interface=INTERFACE)? block=block dotTerminal=DOT)?
    ;
@@ -125,31 +129,11 @@ structuredType
    ;
 
 unpackedStructuredType
-   : unpackedStructuredType=(arrayType
-   | recordType
-   | setType
-   | fileType)
+   : unpackedStructuredType=recordType
    ;
 
 stringtype
    : stringTerminal=STRING lBrack=LBRACK (ID=identifier | unsignedNumber=unsignedNumber) rBrack=RBRACK
-   ;
-
-arrayType
-   : arrayTerminal=ARRAY lBrack=LBRACK typeList=typeList rBrack=RBRACK ofTerminal=OF componentType=componentType
-   | arrayTerminal=ARRAY lBrack2=LBRACK2 typeList=typeList rBrack2=RBRACK2 ofTerminal=OF componentType=componentType
-   ;
-
-typeList
-   : indexType=indexType (COMMA indexType=indexType)*
-   ;
-
-indexType
-   : simpleType=simpleType
-   ;
-
-componentType
-   : typeStart=typeStart
    ;
 
 recordType
@@ -180,19 +164,6 @@ tag
 
 variant
    : constList=constList COLON LPAREN fieldList=fieldList RPAREN
-   ;
-
-setType
-   : SET OF baseType=baseType
-   ;
-
-baseType
-   : simpleType=simpleType
-   ;
-
-fileType
-   : FILE OF typeStart=typeStart
-   | FILE
    ;
 
 pointerType
@@ -378,7 +349,6 @@ empty
 
 structuredStatement
    : compoundStatement=compoundStatement
-   | conditionalStatement=conditionalStatement
    | repetetiveStatement=repetetiveStatement
    | withStatement=withStatement
    ;
@@ -391,51 +361,12 @@ statements
    : statement1=statement (SEMI statement2=statement)*
    ;
 
-conditionalStatement
-   : ifStatement=ifStatement
-   | caseStatement=caseStatement
-   ;
-
-ifStatement
-   : ifTerminal=IF expression=expression thenTerminal=THEN statement1=statement (colon=COLON elseTerminal=ELSE statement2=statement)?
-   ;
-
-caseStatement
-   : caseTerminal=CASE expression=expression of=OF caseListElement1=caseListElement (semi1=SEMI caseListElement2=caseListElement)* (semi2=SEMI elseTerminal=ELSE statement=statements)? END
-   ;
-
-caseListElement
-   : constList=constList colonTerminal=COLON statement=statement
-   ;
-
 repetetiveStatement
-   : whileStatement
-   | repeatStatement
-   | forStatement
-   ;
-
-whileStatement
-   : whileTerminal=WHILE expression=expression doTerminal=DO statement=statement
+   : repeatStatement
    ;
 
 repeatStatement
    : repeatTerminal=REPEAT statement=statements UNTIL expression
-   ;
-
-forStatement
-   : forTerminal=FOR identifier=identifier assignTerminal=ASSIGN forList=forList doTerminal=DO statement=statement
-   ;
-
-forList
-   : initialValue=initialValue (TO | DOWNTO) finalValue=finalValue
-   ;
-
-initialValue
-   : expression
-   ;
-
-finalValue
-   : expression
    ;
 
 withStatement
@@ -580,12 +511,7 @@ fragment Z
 terminal AND
    : "and"
    ;
-
-
-terminal ARRAY
-   : "array"
-   ;
-
+   
 
 terminal BEGIN
    : "begin"
@@ -627,28 +553,8 @@ terminal DO
    ;
 
 
-terminal DOWNTO
-   : "downto"
-   ;
-
-
-terminal ELSE
-   : "else"
-   ;
-
-
 terminal END
    : "end"
-   ;
-
-
-terminal FILE
-   : "file"
-   ;
-
-
-terminal FOR
-   : "for"
    ;
 
 
@@ -659,11 +565,6 @@ terminal FUNCTION
 
 terminal GOTO
    : "goto"
-   ;
-
-
-terminal IF
-   : "if"
    ;
 
 
@@ -737,21 +638,6 @@ terminal REPEAT
    ;
 
 
-terminal SET
-   : "set"
-   ;
-
-
-terminal THEN
-   : "then"
-   ;
-
-
-terminal TO
-   : "to"
-   ;
-
-
 terminal TYPE
    : "type"
    ;
@@ -764,11 +650,6 @@ terminal UNTIL
 
 terminal VAR
    : "Var"
-   ;
-
-
-terminal WHILE
-   : "while"
    ;
 
 
