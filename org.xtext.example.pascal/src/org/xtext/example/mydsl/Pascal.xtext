@@ -252,17 +252,7 @@ variable
    ;
 
 expression
-   : simpleExpression=simpleExpression (relationaloperator+=relationaloperator expression+=expression)?
-   ;
-
-relationaloperator
-   : "="
-   | "<>"
-   | "<"
-   | "<="
-   | ">="
-   | ">"
-   | "in"
+   : simpleExpression=simpleExpression
    ;
 
 simpleExpression
@@ -297,7 +287,6 @@ factor
    | "(" expression=expression ")"
    | functionDesignator=functionDesignator
    | unsignedConstant=unsignedConstant
-   | setStart=setStart
    | not="not" factor=factor
    | bool=bool
    ;
@@ -315,19 +304,6 @@ functionDesignator
 
 parameterList
    : actualParameter1=actualParameter ("," actualParameter2+=actualParameter)*
-   ;
-
-setStart
-   : "[" elementList=elementList "]"
-   | "(." elementList=elementList ".)"
-   ;
-
-elementList
-   : element1=element ("," element2+=element)*
-   ;
-
-element
-   : expression1=expression (".." expression2=expression)?
    ;
 
 procedureStatement
