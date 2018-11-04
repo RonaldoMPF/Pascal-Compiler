@@ -2,7 +2,6 @@ grammar org.xtext.example.mydsl.Pascal with org.eclipse.xtext.common.Terminals
 
 generate pascal "http://www.xtext.org/example/mydsl/Pascal"
 
-
 toBegin:
 	elements = programStart?
 ;
@@ -21,11 +20,15 @@ identifier
    ;
 
 block
-   : (labelDeclarationPart+=labelDeclarationPart | constantDefinitionPart+=constantDefinitionPart | typeDefinitionPart+=typeDefinitionPart 
+   : (labelDeclarationPart+=labelDeclarationPart 
+   	| constantDefinitionPart+=constantDefinitionPart 
+   	| typeDefinitionPart+=typeDefinitionPart 
    	| variableDeclarationPart+=variableDeclarationPart 
-   	| procedureAndFunctionDeclarationPart+=procedureAndFunctionDeclarationPart | usesUnitsPart+=usesUnitsPart | ImplemeTerminal+="implementation"
-   )* compoundStatement=compoundStatement
+   	| procedureAndFunctionDeclarationPart+=procedureAndFunctionDeclarationPart 
+   	| usesUnitsPart+=usesUnitsPart 
+   	| ImplemeTerminal+="implementation")* compoundStatement=compoundStatement
    ;
+
 
 usesUnitsPart
    : usesTerminal="uses" identifierList=identifierList semiTerminal=";"
@@ -54,8 +57,8 @@ constantChr
 constant
    : unsignedNumber=unsignedNumber
    | sign1=sign unsignedNumber=unsignedNumber
-   | ID1=identifier
-   | sign2=sign ID2=identifier
+   | identifier1=identifier
+   | sign2=sign identifier2=identifier
    | string=StringStart
    | constantChr=constantChr
    ;
@@ -191,7 +194,6 @@ procedureOrFunctionDeclaration
 procedureDeclaration
    : procedureTerminal="procedure" identifier=identifier (formalParameterList=formalParameterList)? ";" block=block
    ;
-
 formalParameterList
    : "(" formalParameterSection1=formalParameterSection (";" formalParameterSection2+=formalParameterSection)* ")"
    ;
@@ -224,7 +226,7 @@ resultType
    ;
 
 statement
-   : labelStart=labelStart ":" unlabelledStatement=unlabelledStatement
+   : labelStart=labelStart colonTerminal=":" unlabelledStatement=unlabelledStatement
    | unlabelledStatement=unlabelledStatement
    ;
 
@@ -271,6 +273,7 @@ additiveoperator
    : "+"
    | "-"
    | "or"
+   | "xor"
    ;
 
 term
@@ -341,7 +344,7 @@ gotoStatement
 
 structuredStatement
    : compoundStatement=compoundStatement
-   | repetetiveStatement=repetetiveStatement
+     repetetiveStatement=repetetiveStatement
    | withStatement=withStatement
    ;
 
@@ -350,7 +353,7 @@ compoundStatement
    ;
 
 statements
-   : statement1=statement (";" statement2+=statement)*
+   : statement1+=statement (semiTerminal1+=";" statement2+=statement)* semiTerminal2=";"
    ;
 
 repetetiveStatement
