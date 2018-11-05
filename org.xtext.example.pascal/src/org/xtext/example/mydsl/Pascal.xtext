@@ -7,12 +7,12 @@ toBegin:
 ;
 
 programStart
-   : programHeading=programHeading (interface="interface")? block=block dotTerminal="."
+   : programHeading=programHeading (interface="interface")? block=block "."
    ;
 
 programHeading
-   : program="program" identifier1=identifier (lParen="(" identifierList+=identifierList rparen=")")? semiTerminal=";"
-   | {programHeading} unit="unit" identifier2=identifier semiTerminal=";"
+   : "program" identifier1=identifier ("(" identifierList+=identifierList ")")? ";"
+   | {programHeading} "unit" identifier2=identifier ";"
    ;
 
 identifier
@@ -31,11 +31,11 @@ block
 
 
 usesUnitsPart
-   : usesTerminal="uses" identifierList=identifierList semiTerminal=";"
+   : "uses" identifierList=identifierList ";"
    ;
 
 labelDeclarationPart
-   : labelTerminal="label" labelStart1=labelStart (commaTerminal+="," labelStart2+=labelStart)* semiTerminal=";"
+   : "label" labelStart1=labelStart (commaTerminal+="," labelStart2+=labelStart)* ";"
    ;
 
 labelStart
@@ -43,15 +43,15 @@ labelStart
    ;
 
 constantDefinitionPart
-   : constTerminal="const" (constantDefinition+=constantDefinition semiTerminal+=";") +
+   : "const" (constantDefinition+=constantDefinition semiTerminal+=";") +
    ;
 
 constantDefinition
-   : ID=identifier equalTerminal="=" constant=constant
+   : ID=identifier "=" constant=constant
    ;
 
 constantChr
-   : chRTerminal="chr" lParen="(" unsignedInteger=unsignedInteger rParen=")"
+   : "chr" "(" unsignedInteger=unsignedInteger ")"
    ;
 
 constant
@@ -89,19 +89,19 @@ StringStart
    ;
 
 typeDefinitionPart
-   : typeTerminal="type" (typeDefinition+=typeDefinition semiTerminal+=";") +
+   : "type" (typeDefinition+=typeDefinition semiTerminal+=";") +
    ;
 
 typeDefinition
-   : ID1=identifier equalTerminal="=" type=(typeStart | functionType | procedureType)
+   : ID1=identifier "=" type= (typeStart | functionType | procedureType)
    ;
 
 functionType
-   : functionTerminal="function" (formalParameterList=formalParameterList)? colonTerminal=":" resultType=resultType
+   : "function" (formalParameterList=formalParameterList)? ":" resultType=resultType
    ;
 
 procedureType
-   : procedureTerminal="procedure" (formalParameterList=formalParameterList)?
+   : {procedureType} "procedure" (formalParameterList=formalParameterList)?
    ;
 
 typeStart
@@ -116,19 +116,19 @@ simpleType
    ;
 
 scalarType
-   : lParen="(" identifierList=identifierList rParen=")"
+   : "(" identifierList=identifierList ")"
    ;
 
 subrangeType
-   : constant1=constant dotTerminal=".." constan2=constant
+   : constant1=constant ".." constan2=constant
    ;
 
 typeIdentifier
-   : identifier=identifier | type=("Char" | "Boolean" | "Integer" | "Real" | "String")
+   : identifier=identifier | type= ("Char" | "Boolean" | "Integer" | "Real" | "String")
    ;
 
 structuredType
-   : packedTerminal="packed" unpackedStructuredType1=unpackedStructuredType
+   : "packed" unpackedStructuredType1=unpackedStructuredType
    | unpackedStructuredType2=unpackedStructuredType
    ;
 
@@ -137,20 +137,20 @@ unpackedStructuredType
    ;
 
 stringtype
-   : stringTerminal=STRING lBrack="[" (ID=identifier | unsignedNumber=unsignedNumber) rBrack="]"
+   : stringTerminal=STRING "[" (ID=identifier | unsignedNumber=unsignedNumber) "]"
    ;
 
 recordType
-   : recordTerminal="record" (fieldList+=fieldList)? endTerminal="end"
+   : {recordType} "record" (fieldList=fieldList)? "end"
    ;
 
 fieldList
-   : fixedPart=fixedPart (";" variantPart1=variantPart)?
-   | variantPart2=variantPart
+   : fixedPart=fixedPart (semiTerminal=";" variantPart1=variantPart)? ";"
+   | variantPart2=variantPart ";"
    ;
 
 fixedPart
-   : recordSection (";" recordSection+=recordSection)*
+   : recordSection (semiTerminal+=";" recordSection+=recordSection)* 
    ;
 
 recordSection
@@ -158,7 +158,7 @@ recordSection
    ;
 
 variantPart
-   : case="case" tag=tag of="of" variant1=variant (";" variant2+=variant)*
+   : "case" tag=tag "of" variant1=variant (semiTerminal+=";" variant2+=variant)*
    ;
 
 tag
@@ -175,7 +175,7 @@ pointerType
    ;
 
 variableDeclarationPart
-   : varTerminal="var" variableDeclaration1=variableDeclaration (";" variableDeclaration2+=variableDeclaration)* ";"
+   : "var" variableDeclaration1=variableDeclaration (semiTerminal+=";" variableDeclaration2+=variableDeclaration)* ";"
    ;
 
 variableDeclaration
@@ -192,17 +192,17 @@ procedureOrFunctionDeclaration
    ;
 
 procedureDeclaration
-   : procedureTerminal="procedure" identifier=identifier (formalParameterList=formalParameterList)? ";" block=block
+   : "procedure" identifier=identifier (formalParameterList=formalParameterList)? ";" block=block
    ;
 formalParameterList
-   : "(" formalParameterSection1=formalParameterSection (";" formalParameterSection2+=formalParameterSection)* ")"
+   : "(" formalParameterSection1=formalParameterSection (semiterminal+=";" formalParameterSection2+=formalParameterSection)* ")"
    ;
 
 formalParameterSection
    : parameterGroup=parameterGroup
-   | varTerminal="var" parameterGroup=parameterGroup
-   | functionTerminal="function" parameterGroup=parameterGroup
-   | procedureTerminal="procedure" parameterGroup=parameterGroup
+   | "var" parameterGroup=parameterGroup
+   | "function" parameterGroup=parameterGroup
+   | "procedure" parameterGroup=parameterGroup
    ;
 
 parameterGroup
@@ -210,15 +210,15 @@ parameterGroup
    ;
 
 identifierList
-   : identifier1=identifier ("," identifier2+=identifier)*
+   : identifier1=identifier (commaTerminal+="," identifier2+=identifier)*
    ;
 
 constList
-   : constant1=constant ("," constant2+=constant)*
+   : constant1=constant (commaTerminal+="," constant2+=constant)*
    ;
 
 functionDeclaration
-   : functionTerminal="function" identifier=identifier (formalParameterList=formalParameterList)? ":" resultType=resultType ";" block=block
+   : "function" identifier=identifier (formalParameterList=formalParameterList)? ":" resultType=resultType ";" block=block
    ;
 
 resultType
@@ -226,7 +226,7 @@ resultType
    ;
 
 statement
-   : labelStart=labelStart colonTerminal=":" unlabelledStatement=unlabelledStatement
+   : labelStart=labelStart ":" unlabelledStatement=unlabelledStatement
    | unlabelledStatement=unlabelledStatement
    ;
 
@@ -247,8 +247,7 @@ assignmentStatement
 
 variable
    : ("@" identifier1=identifier | identifier2=identifier) ("[" expression+=expression ("," expression+=expression)* "]" 
-   	| "(." expression+=expression ("," expression+=expression)* ".)" | "." identifier3+=identifier | "^"
-   )*
+   	| "(." expression+=expression ("," expression+=expression)* ".)" | "." identifier3+=identifier | "^" )*
    ;
 
 expression
@@ -276,6 +275,8 @@ multiplicativeoperator
    | "div"
    | "mod"
    | "and"
+   | "="
+   | "<>"
    ;
 
 signedFactor
@@ -320,7 +321,7 @@ gotoStatement
 
 structuredStatement
    : compoundStatement=compoundStatement
-     repetetiveStatement=repetetiveStatement
+   | repetetiveStatement=repetetiveStatement
    | withStatement=withStatement
    ;
 
@@ -337,15 +338,15 @@ repetetiveStatement
    ;
 
 repeatStatement
-   : repeatTerminal="repeat" statement=statements "until" expression=expression
+   : "repeat" statement=statements "until" expression=expression
    ;
 
 withStatement
-   : withTerminal="with" recordVariableList=recordVariableList do="do" statement=statement
+   : "with" recordVariableList=recordVariableList "do" statement=statement
    ;
 
 recordVariableList
-   : variable1=variable ("," variable2+=variable)*
+   : variable1=variable (commaTerminal+="," variable2+=variable)*
    ;
     
 terminal COMMENT_1
@@ -369,8 +370,7 @@ terminal NUM_INT
 
 
 terminal NUM_REAL
-   : //('0' .. '9') + (('.' ('0' .. '9') + (EXPONENT)?)? | EXPONENT)
-   		(NUM_INT) + (('.' NUM_INT + (EXPONENT)?)? | EXPONENT)
+   : (NUM_INT) + (('.' NUM_INT + (EXPONENT)?)? | EXPONENT)
    ;
 
 
