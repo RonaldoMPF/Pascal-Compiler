@@ -61,6 +61,7 @@ constant
    | sign2=sign identifier2=identifier
    | string=StringStart
    | constantChr=constantChr
+   | bool
    ;
 
 unsignedNumber
@@ -141,12 +142,12 @@ stringtype
    ;
 
 recordType
-   : {recordType} "record" (fieldList=fieldList)? "end"
+   : {recordType} "record" (fieldList=fieldList semiTerminal=";")? "end" 
    ;
 
 fieldList
-   : fixedPart=fixedPart (semiTerminal=";" variantPart1=variantPart)? ";"
-   | variantPart2=variantPart ";"
+   : fixedPart=fixedPart (semiTerminal=";" variantPart1=variantPart)? 
+   | variantPart2=variantPart 
    ;
 
 fixedPart
@@ -158,7 +159,7 @@ recordSection
    ;
 
 variantPart
-   : "case" tag=tag "of" variant1=variant (semiTerminal+=";" variant2+=variant)*
+   : "case" tag=tag "of" variant1=variant (semiTerminal+=";" variant2+=variant)* 
    ;
 
 tag
