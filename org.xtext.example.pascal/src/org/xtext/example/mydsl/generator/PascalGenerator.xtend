@@ -3,10 +3,14 @@
  */
 package org.xtext.example.mydsl.generator
 
+import java.util.HashMap
+import java.util.Map
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import org.xtext.example.mydsl.pascal.block
+import org.xtext.example.mydsl.pascal.programStart
 
 /**
  * Generates code from your model files on save.
@@ -14,12 +18,61 @@ import org.eclipse.xtext.generator.IGeneratorContext
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class PascalGenerator extends AbstractGenerator {
+	
+	private int currentReg;
+	private int currentLine;
+	private Map<String, String> mapRegs;
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-//		fsa.generateFile('greetings.txt', 'People to greet: ' + 
-//			resource.allContents
-//				.filter(Greeting)
-//				.map[name]
-//				.join(', '))
+		
+		for (p: resource.allContents.toIterable.filter(programStart)) {			
+			currentReg = 0;
+			currentLine = 0;
+			mapRegs = new HashMap<String, String>();
+			fsa.deleteFile("output.asm");
+			fsa.generateFile("output.asm", p.block.compile);
+		}
+	
+	
 	}
+	
+	def getNextLine(){
+		currentLine +=8;
+		return currentLine+": ";
+	}
+	
+	def getNextReg(){
+		currentReg++;
+		return "R"+currentReg;
+	}
+	def getCurrentReg(){
+		return "R"+currentReg;
+	}
+	
+	def compile(block block) '''
+		«getNextLine() + "LD SP #stackStart"»
+		«block.compileVariableDeclaration»
+		«getNextLine() + "BR *0(SP)"»
+		
+	'''
+	
+	def compileVariableDeclaration(block block) '''
+		«var declarationVariable = block.variableDeclarationPart»
+		«FOR variablesDeclaration : declarationVariable»
+			«FOR declarationVariables : variablesDeclaration.variableDeclaration»
+				«FOR name : declarationVariables.identifierList.identifier»
+					«getNextLine() + "LD " + nextReg+ ", " + name.identifier»
+					«mapRegs.put(name.identifier,getCurrentReg)»
+				«ENDFOR»
+			«ENDFOR»
+		«ENDFOR»
+	'''
+	
+	def compileBooleanAditiveExpression(block block) '''
+		
+		
+	'''
+	
+	
+	
 }
