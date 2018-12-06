@@ -1,0 +1,380 @@
+grammar org.xtext.example.mydsl.Pascal with org.eclipse.xtext.common.Terminals
+
+generate pascal "http://www.xtext.org/example/mydsl/Pascal"
+
+toBegin:
+	elements = programStart?
+;
+
+programStart
+   : programHeading=programHeading (interface="interface")? block=block "."
+   ;
+
+programHeading
+   : "program" identifier1=identifier ("(" identifierList+=identifierList ")")? ";"
+   | {programHeading} "unit" identifier2=identifier ";"
+   ;
+
+identifier
+   : identifier=IDENT
+   ;
+
+block
+   : (labelDeclarationPart+=labelDeclarationPart 
+   	| constantDefinitionPart+=constantDefinitionPart 
+   	| typeDefinitionPart+=typeDefinitionPart 
+   	| variableDeclarationPart+=variableDeclarationPart 
+   	| procedureAndFunctionDeclarationPart+=procedureAndFunctionDeclarationPart 
+   	| usesUnitsPart+=usesUnitsPart 
+   	| ImplemeTerminal+="implementation")* compoundStatement=compoundStatement
+   ;
+
+
+usesUnitsPart
+   : "uses" identifierList=identifierList ";"
+   ;
+
+labelDeclarationPart
+   : "label" labelStart1=labelStart (commaTerminal+="," labelStart2+=labelStart)* ";"
+   ;
+
+labelStart
+   : unsignedInteger=unsignedInteger
+   ;
+
+constantDefinitionPart
+   : "const" (constantDefinition+=constantDefinition semiTerminal+=";") +
+   ;
+
+constantDefinition
+   : ID=identifier "=" constant=constant
+   ;
+
+constantChr
+   : "chr" "(" unsignedInteger=unsignedInteger ")"
+   ;
+
+constant
+   : unsignedNumber=unsignedNumber
+   | sign1=sign unsignedNumber=unsignedNumber
+   | identifier1=identifier
+   | sign2=sign identifier2=identifier
+   | string=StringStart
+   | constantChr=constantChr
+   | bool
+   ;
+
+unsignedNumber
+   : unsignedInteger=unsignedInteger
+   | unsignedReal=unsignedReal
+   ;
+
+unsignedInteger
+   : unsignedInteger=NUM_INT
+   ;
+
+unsignedReal
+   : unsignedReal=NUM_REAL
+   ;
+
+sign
+   : sign= ("+" | "-")
+   ;
+
+bool
+   : bool= ( "true" | "false")
+   ;
+
+StringStart
+   : StringStart=STRING
+   ;
+
+typeDefinitionPart
+   : "type" (typeDefinition+=typeDefinition semiTerminal+=";") +
+   ;
+
+typeDefinition
+   : ID1=identifier "=" type= (typeStart | functionType | procedureType)
+   ;
+
+functionType
+   : "function" (formalParameterList=formalParameterList)? ":" resultType=resultType
+   ;
+
+procedureType
+   : {procedureType} "procedure" (formalParameterList=formalParameterList)?
+   ;
+
+typeStart
+   : typeStart = (simpleType | structuredType| pointerType)
+   ;
+
+simpleType
+   : simpleType= (scalarType
+   | subrangeType
+   | typeIdentifier
+   | stringtype)
+   ;
+
+scalarType
+   : "(" identifierList=identifierList ")"
+   ;
+
+subrangeType
+   : constant1=constant ".." constan2=constant
+   ;
+
+typeIdentifier
+   : identifier=identifier | type= ("Char" | "Boolean" | "Integer" | "Real" | "String")
+   ;
+
+structuredType
+   : "packed" unpackedStructuredType1=unpackedStructuredType
+   | unpackedStructuredType2=unpackedStructuredType
+   ;
+
+unpackedStructuredType
+   : unpackedStructuredType=recordType
+   ;
+
+stringtype
+   : stringTerminal=STRING "[" (ID=identifier | unsignedNumber=unsignedNumber) "]"
+   ;
+
+recordType
+   : {recordType} "record" (fieldList=fieldList semiTerminal=";")? "end" 
+   ;
+
+fieldList
+   : fixedPart=fixedPart (semiTerminal=";" variantPart1=variantPart)? 
+   | variantPart2=variantPart 
+   ;
+
+fixedPart
+   : recordSection (semiTerminal+=";" recordSection+=recordSection)* 
+   ;
+
+recordSection
+   : identifierList=identifierList ":" typeStart=typeStart
+   ;
+
+variantPart
+   : "case" tag=tag "of" variant1=variant (semiTerminal+=";" variant2+=variant)* 
+   ;
+
+tag
+   : ID=identifier ":" typeIdentifier1=typeIdentifier
+   | typeIdentifier2=typeIdentifier
+   ;
+
+variant
+   : constList=constList ":" "(" fieldList=fieldList ")"
+   ;
+
+pointerType
+   : "^" typeIdentifier=typeIdentifier
+   ;
+
+variableDeclarationPart
+   : "var" variableDeclaration1=variableDeclaration (semiTerminal+=";" variableDeclaration2+=variableDeclaration)* ";"
+   ;
+
+variableDeclaration
+   : identifierList=identifierList ":" typeStart=typeStart
+   ;
+
+procedureAndFunctionDeclarationPart
+   : procedureOrFunctionDeclaration=procedureOrFunctionDeclaration ";"
+   ;
+
+procedureOrFunctionDeclaration
+   : procedureDeclaration=procedureDeclaration
+   | functionDeclaration=functionDeclaration
+   ;
+
+procedureDeclaration
+   : "procedure" identifier=identifier (formalParameterList=formalParameterList)? ";" block=block
+   ;
+formalParameterList
+   : "(" formalParameterSection1=formalParameterSection (semiterminal+=";" formalParameterSection2+=formalParameterSection)* ")"
+   ;
+
+formalParameterSection
+   : parameterGroup=parameterGroup
+   | "var" parameterGroup=parameterGroup
+   | "function" parameterGroup=parameterGroup
+   | "procedure" parameterGroup=parameterGroup
+   ;
+
+parameterGroup
+   : identifierList=identifierList ":" typeIdentifier=typeIdentifier
+   ;
+
+identifierList
+   : identifier1=identifier (commaTerminal+="," identifier2+=identifier)*
+   ;
+
+constList
+   : constant1=constant (commaTerminal+="," constant2+=constant)*
+   ;
+
+functionDeclaration
+   : "function" identifier=identifier (formalParameterList=formalParameterList)? ":" resultType=resultType ";" block=block
+   ;
+
+resultType
+   : typeIdentifier=typeIdentifier
+   ;
+
+statement
+   : labelStart=labelStart ":" unlabelledStatement=unlabelledStatement
+   | unlabelledStatement=unlabelledStatement
+   ;
+
+unlabelledStatement
+   : {unlabelledStatement} simpleStatement=simpleStatement
+   | structuredStatement=structuredStatement
+   ;
+
+simpleStatement
+   : assignmentStatement=assignmentStatement
+   | procedureStatement=procedureStatement
+   | gotoStatement=gotoStatement
+   ;
+
+assignmentStatement
+   : variable=variable ":=" expression=expression
+   ;
+
+variable
+   : ("@" identifier1=identifier | identifier2=identifier) ("[" expression+=expression ("," expression+=expression)* "]" 
+   	| "(." expression+=expression ("," expression+=expression)* ".)" | "." identifier3+=identifier | "^" )*
+   ;
+
+expression
+   : simpleExpression=simpleExpression
+   ;
+
+simpleExpression
+   : term=term (additiveoperator simpleExpression=simpleExpression)?
+   ;
+
+additiveoperator
+   : "+"
+   | "-"
+   | "or"
+   | "xor"
+   ;
+
+term
+   : signedFactor=signedFactor (multiplicativeoperator term=term)?
+   ;
+
+multiplicativeoperator
+   : "*"
+   | "/"
+   | "div"
+   | "mod"
+   | "and"
+   | "="
+   | "<>"
+   ;
+
+signedFactor
+   : ("+" | "-")? factor=factor
+   ;
+
+factor
+   : variable=variable
+   | "(" expression=expression ")"
+   | functionDesignator=functionDesignator
+   | unsignedConstant=unsignedConstant
+   | not="not" factor=factor
+   | bool=bool
+   ;
+
+unsignedConstant
+   : unsignedNumber=unsignedNumber
+   | constantChr=constantChr
+   | StringStart=StringStart
+   | nil="nil"
+   ;
+
+functionDesignator
+   : identifier=identifier "(" parameterList=parameterList ")"
+   ;
+
+parameterList
+   : actualParameter1=actualParameter ("," actualParameter2+=actualParameter)*
+   ;
+
+procedureStatement
+   : identifier=identifier ("(" parameterList=parameterList ")")?
+   ;
+
+actualParameter
+   : expression=expression
+   ;
+
+gotoStatement
+   : "goto" labelStart=labelStart
+   ;
+
+structuredStatement
+   : compoundStatement=compoundStatement
+   | repetetiveStatement=repetetiveStatement
+   | withStatement=withStatement
+   ;
+
+compoundStatement
+   : "begin" statements=statements "end"
+   ;
+
+statements
+   : statement1+=statement (semiTerminal1+=";" statement2+=statement)* semiTerminal2=";"
+   ;
+
+repetetiveStatement
+   : repeatStatement
+   ;
+
+repeatStatement
+   : "repeat" statement=statements "until" expression=expression
+   ;
+
+withStatement
+   : "with" recordVariableList=recordVariableList "do" statement=statement
+   ;
+
+recordVariableList
+   : variable1=variable (commaTerminal+="," variable2+=variable)*
+   ;
+    
+terminal COMMENT_1
+   : '(*' -> '*)' 
+   ;
+
+
+terminal COMMENT_2
+   : '{' -> '}'  
+   ;
+
+
+terminal IDENT
+   : ('a' .. 'z' | 'A' .. 'Z') ('a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_')*
+   ;
+
+
+terminal NUM_INT
+   : INT
+   ;
+
+
+terminal NUM_REAL
+   : (NUM_INT) + (('.' NUM_INT + (EXPONENT)?)? | EXPONENT)
+   ;
+
+
+terminal fragment EXPONENT
+   : ('e') ('+' | '-')? ('0' .. '9') +
+;
