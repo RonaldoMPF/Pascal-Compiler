@@ -56,12 +56,14 @@ constantChr
 
 constant
    : unsignedNumber=unsignedNumber
-   | sign1=sign unsignedNumber=unsignedNumber
+//   | sign1=sign unsignedNumber=unsignedNumber
+   | signNumber=sign unsignedNumber=unsignedNumber
    | identifier1=identifier
-   | sign2=sign identifier2=identifier
+//   | sign2=sign identifier2=identifier
+   | signIndentifier=sign identifier2=identifier
    | string=StringStart
    | constantChr=constantChr
-   | bool
+   | booleanConst = bool ////Mudei aqui!! originnal: | bool
    ;
 
 unsignedNumber
@@ -105,15 +107,26 @@ procedureType
    : {procedureType} "procedure" (formalParameterList=formalParameterList)?
    ;
 
+//typeStart
+//   : typeStart = (simpleType | structuredType| pointerType)
+//   ;
+//Mudei aqui
 typeStart
-   : typeStart = (simpleType | structuredType| pointerType)
+   : simple=simpleType | structured=structuredType| pointer=pointerType
    ;
 
+//simpleType
+//   : simpleType= (scalarType
+//   | subrangeType
+//   | typeIdentifier
+//   | stringtype)
+//   ;
+//Mudei aqui
 simpleType
-   : simpleType= (scalarType
-   | subrangeType
-   | typeIdentifier
-   | stringtype)
+   : scalar = scalarType
+   | subrange = subrangeType
+   | typeIdentifier = typeIdentifier
+   | stringtype = stringtype
    ;
 
 scalarType
