@@ -4,6 +4,7 @@
 package org.xtext.example.mydsl.generator
 
 import java.util.ArrayList
+import java.util.HashMap
 import java.util.List
 import java.util.Map
 import org.eclipse.emf.ecore.resource.Resource
@@ -11,11 +12,12 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.xtext.example.mydsl.pascal.block
-import org.xtext.example.mydsl.pascal.digitSequence
+import org.xtext.example.mydsl.pascal.digit_sequence
 import org.xtext.example.mydsl.pascal.factor
-import org.xtext.example.mydsl.pascal.integerNumber
-import org.xtext.example.mydsl.pascal.realNumber
-import org.xtext.example.mydsl.pascal.scaleFactor
+import org.xtext.example.mydsl.pascal.integer_number
+import org.xtext.example.mydsl.pascal.program
+import org.xtext.example.mydsl.pascal.real_number
+import org.xtext.example.mydsl.pascal.scale_factor
 import org.xtext.example.mydsl.pascal.term
 
 /**
@@ -25,27 +27,59 @@ import org.xtext.example.mydsl.pascal.term
  */
 class PascalGenerator extends AbstractGenerator {
 	
-		
 	private int currentReg;
 	private int currentLine;
 	private Map<String, String> mapRegs;
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-//		fsa.generateFile('greetings.txt', 'People to greet: ' + 
-//			resource.allContents
-//				.filter(Greeting)
-//				.map[name]
-//				.join(', '))
+		for (p: resource.allContents.toIterable.filter(program)) {			
+			currentReg = 0;
+			currentLine = 0;
+			mapRegs = new HashMap<String, String>();
+			fsa.deleteFile("output.asm");
+			fsa.generateFile("output.asm", p.block.compile);
+		}
+
+	}	
+	
+	def getNextLine(){
+		currentLine +=8;
+		return currentLine+": ";
 	}
 	
+	def getNextReg(){
+		currentReg++;
+		return "R"+currentReg;
+	}
+	def getCurrentReg(){
+		return "R"+currentReg;
+	}
+	
+	def compile(block block) '''
+		«getNextLine() + "LD SP #stackStart"»
+		«block.compileVariableDeclaration»
+		«block.compileAttribution»
+		«getNextLine() + "BR *0(SP)"»
+	'''
+	
+	def compileVariableDeclaration(block block) '''
+		«var declaration_variable = block.declaration_part.variable_declaration_part»
+		«FOR variables_declaration : declaration_variable.variable_declaration»
+			«FOR name : variables_declaration.identifier_list.identifier»
+				«getNextLine() + "LD " + nextReg+ ", " + name»
+				«mapRegs.put(name, getCurrentReg)»
+			«ENDFOR»
+		«ENDFOR»
+	'''
+	
 	def compileAttribution(block block) '''	
-		«FOR statement:block.compoundStatement.statements.statement»
-				«IF statement !== null && statement.unlabelledStatement.simpleStatement !== null && statement.unlabelledStatement.simpleStatement.assignmentStatement !== null && statement.unlabelledStatement.simpleStatement.assignmentStatement.expression !== null»
-					«FOR simple_expression: statement.unlabelledStatement.simpleStatement.assignmentStatement.expression.simpleExpression»
+		«FOR statement:block.statement_part.statement_sequence.statement»
+				«IF statement !== null && statement.simple_statement !== null && statement.simple_statement.assignment_statement !== null && statement.simple_statement.assignment_statement.expression !== null»
+					«FOR simple_expression: statement.simple_statement.assignment_statement.expression.simple_expression»
 						«var List<Integer> listSum = new ArrayList<Integer>()»
 						«var List<String> listSign= new ArrayList<String>()»
 						«var List<Integer> listMul = new ArrayList<Integer>()»
-						«var variableLeftName = statement.assignment_statement.variable.entire_variable.identifier.identifier»
+						«var variableLeftName = statement.simple_statement.assignment_statement.variable.entire_variable.identifier.identifier»
 						«IF simple_expression !== null»
 							«FOR term:simple_expression.term»													
 								«IF simple_expression.addition_operator.size == 0 && term.multiplication_operator.size == 0»
@@ -78,22 +112,7 @@ class PascalGenerator extends AbstractGenerator {
 					«ENDFOR»					
 				«ENDIF»		
 			«ENDFOR»
-'''
-	
-	
-	def getNextLine(){
-		currentLine +=8;
-		return currentLine+": ";
-	}
-	
-	def getNextReg(){
-		currentReg++;
-		return "R"+currentReg;
-	}
-	def getCurrentReg(){
-		return "R"+currentReg;
-	}
-	
+		'''
 	
 	def storageMUL(List<Integer> listMul, String variableLeftName, List<String> listSign) '''
 		«IF listMul.size > 1»
@@ -125,8 +144,8 @@ class PascalGenerator extends AbstractGenerator {
 	
 	def loadForExpressionAddOrMul(term term, String variableLeftName, List<Integer> listOperands)'''
 		«FOR factor: term.factor»
-			«IF factor !== null && factor.variable !== null && factor.variable.entireVariable !== null»
-				«var variableRigthName = factor.variable.entireVariable.identifier.identifier»
+			«IF factor !== null && factor.variable !== null && factor.variable.entire_variable !== null»
+				«var variableRigthName = factor.variable.entire_variable.identifier.identifier»
 				«getNextLine() + "LD " + nextReg + ", " + variableRigthName»
 				«var aux = listOperands.add(currentReg)»
 			«ENDIF»
@@ -135,11 +154,11 @@ class PascalGenerator extends AbstractGenerator {
 				«var aux = listOperands.add(currentReg)»
 			«ENDIF»
 			«IF factor !== null && factor.number !== null»	
-				«IF factor.number.integerNumber !== null»
-					«getNextLine() + "LD " + nextReg + ", #" + getIntegerNumber(factor.number.integerNumber)»
+				«IF factor.number.integer_number !== null»
+					«getNextLine() + "LD " + nextReg + ", #" + getIntegerNumber(factor.number.integer_number)»
 					«var aux = listOperands.add(currentReg)»
 				«ELSE»
-					«getNextLine() + "LD " + nextReg + ", #" + getRealNumber(factor.number.realNumber)»
+					«getNextLine() + "LD " + nextReg + ", #" + getRealNumber(factor.number.real_number)»
 					«var aux = listOperands.add(currentReg)»
 				«ENDIF»
 			«ENDIF»	
@@ -151,18 +170,18 @@ class PascalGenerator extends AbstractGenerator {
 	'''
 	
 	def getCodeExpression(factor factor, String variableLeftName)'''
-		«IF factor !== null && factor.variable !== null && factor.variable.entireVariable !== null»
-			«var variableRigthName = factor.variable.entireVariable.identifier.identifier»
+		«IF factor !== null && factor.variable !== null && factor.variable.entire_variable !== null»
+			«var variableRigthName = factor.variable.entire_variable.identifier.identifier»
 			«getNextLine() + "ST " + variableLeftName + ", " + variableRigthName»
 		«ENDIF»
 		« IF factor !== null && factor.identifier !== null»
 			«getNextLine() + "ST " + variableLeftName + ", " + factor.identifier.identifier»
 		«ENDIF»
 		« IF factor !== null && factor.number !== null»
-			«IF factor.number.integerNumber !== null»
-				«getNextLine() + "ST " + variableLeftName + ", #" + getIntegerNumber(factor.number.integerNumber)»
+			«IF factor.number.integer_number !== null»
+				«getNextLine() + "ST " + variableLeftName + ", #" + getIntegerNumber(factor.number.integer_number)»
 			«ELSE»
-				«getNextLine() + "ST " +  variableLeftName + ", #" + getRealNumber(factor.number.realNumber)»
+				«getNextLine() + "ST " +  variableLeftName + ", #" + getRealNumber(factor.number.real_number)»
 			«ENDIF»
 		«ENDIF»	
 		« IF factor !== null && factor.strings !== null»
@@ -170,44 +189,43 @@ class PascalGenerator extends AbstractGenerator {
 		«ENDIF»
 	'''
 	
-	def getRealNumber(realNumber realNumber) {
+	def getRealNumber(real_number real_number) {
 		var output  = "";
-		output += getDigitSequence(realNumber.digitSequence);
+		output += getDigitSequence(real_number.digit_sequence);
 		
-		if (realNumber.digitSequence2 !== null) {
-			output += "." + getDigitSequence(realNumber.digitSequence2)
+		if (real_number.digit_sequence2 !== null) {
+			output += "." + getDigitSequence(real_number.digit_sequence2)
 		}		
-		if (realNumber.scaleFactor !== null) {
-			output += getScaleFactor(realNumber.scaleFactor);
+		if (real_number.scale_factor !== null) {
+			output += getScaleFactor(real_number.scale_factor);
 		}
 		
 		return output;
 		
 	}
 	
-	def getScaleFactor(scaleFactor factor) {
+	def getScaleFactor(scale_factor factor) {
 		var output = "";
 		output += "e";
 		if (factor.sign !== null) {
 			output += factor.sign;
 		}
-		output += getDigitSequence(factor.digitSequence);
+		output += getDigitSequence(factor.digit_sequence);
 		
 	}
 	
-	def getDigitSequence(digitSequence digitSequence) {
+	def getDigitSequence(digit_sequence digit_sequence) {
 		var output = "";
-		if (digitSequence.sign !== null) {
-			output += digitSequence.sign;
+		if (digit_sequence.sign !== null) {
+			output += digit_sequence.sign;
 		}
-		output += digitSequence.unsignedDigitSequence;
+		output += digit_sequence.unsigned_digit_sequence;
 		
 		return output;
 	}
 	
-	def getIntegerNumber(integerNumber integerNumber) {
-		return getDigitSequence(integerNumber.digitSequence);
+	def getIntegerNumber(integer_number integer_number) {
+		return getDigitSequence(integer_number.digit_sequence);
 	}
-	
 
 }

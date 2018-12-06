@@ -19,7 +19,7 @@ class PascalValidator extends AbstractPascalValidator {
 //			warning('Name should start with a capital', 
 //					PascalPackage.Literals.GREETING__NAME,
 //					INVALID_NAME)
-//		 }
+//		}
 //	}
 	
 }
